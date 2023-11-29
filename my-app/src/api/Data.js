@@ -12,10 +12,11 @@ const typeArr = [
 	{ id: 'multiple', name: 'Multiple Choice' },
 	{ id: 'boolean', name: 'True/False' },
 ];
-const Data = () => {
+
+const Data = ({ visible, setVisible }) => {
 	const [questions, setQuestions] = useState([]);
-	const [category, setCategory] = useState([{ id: 'any', name: 'Any' }]);
-	const [selectedCategory, setSelectedCategory] = useState('any');
+	const [category, setCategory] = useState([]);
+	const [selectedCategory, setSelectedCategory] = useState('');
 	const [number, setNumber] = useState(1);
 	const [hard, setHard] = useState('');
 	const [type, setType] = useState('');
@@ -24,36 +25,42 @@ const Data = () => {
 		fetch('https://opentdb.com/api_category.php')
 			.then(res => res.json())
 			.then(data => {
-				setCategory(prevCategory => [
-					...prevCategory,
-					...data.trivia_categories,
-				]);
+				if (data.trivia_categories) {
+					setCategory(data.trivia_categories);
+					console.log(data.trivia_categories);
+				} else {
+					console.error('No trivia categories found in the response.');
+				}
 			})
 			.catch(err => console.error('category err', err));
 	}, []);
 
-	const handleRequest = () => {
-		const selectedCategoryId =
-			selectedCategory !== 'any'
-				? category.find(el => {
-						if (el.name === selectedCategory) {
-							return el.id;
-						}
-				  })
-				: '';
+	const handleRequest = async () => {
+		const selectedCategoryObj = category.find(
+			item => item.id === selectedCategory
+		);
+		const selectedCategoryId = selectedCategoryObj
+			? selectedCategoryObj.id
+			: '';
+		console.log(selectedCategoryId);
 
-		fetch(
-			`https://opentdb.com/api.php?amount=${number}${
-				selectedCategoryId !== '' ? `&category=${selectedCategoryId}` : ''
-			}${hard !== 'any' ? `&difficulty=${hard}` : ''}${
-				type !== 'any' ? `&type=${type}` : ''
-			}`
-		)
-			.then(response => response.json())
-			.then(data => {})
-			.catch(error => {
-				console.error('Request error', error);
-			});
+		try {
+			const response = await fetch(
+				`https://opentdb.com/api.php?amount=${number}${
+					selectedCategoryId !== '' ? '' : `&category=${selectedCategoryId}`
+				}${hard !== 'any' ? '' : `&difficulty=${hard}`}${
+					type !== 'any' ? '' : `&type=${type}`
+				}`
+			);
+
+			const data = await response.json();
+			setQuestions(data.results);
+			console.log(data.results);
+		} catch (error) {
+			console.error('Request error', error);
+		}
+
+		setVisible(prevState => !prevState);
 	};
 
 	return (
