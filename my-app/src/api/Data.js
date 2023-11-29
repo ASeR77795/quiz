@@ -16,7 +16,7 @@ const Data = () => {
 	const [questions, setQuestions] = useState([]);
 	const [category, setCategory] = useState([{ id: 'any', name: 'Any' }]);
 	const [selectedCategory, setSelectedCategory] = useState('any');
-	const [number, setNumber] = useState('');
+	const [number, setNumber] = useState(1);
 	const [hard, setHard] = useState('');
 	const [type, setType] = useState('');
 
@@ -33,17 +33,24 @@ const Data = () => {
 	}, []);
 
 	const handleRequest = () => {
+		const selectedCategoryId =
+			selectedCategory !== 'any'
+				? category.find(el => {
+						if (el.name === selectedCategory) {
+							return el.id;
+						}
+				  })
+				: '';
+
 		fetch(
 			`https://opentdb.com/api.php?amount=${number}${
-				category ? `&category=${category}` : ''
+				selectedCategoryId !== '' ? `&category=${selectedCategoryId}` : ''
 			}${hard !== 'any' ? `&difficulty=${hard}` : ''}${
 				type !== 'any' ? `&type=${type}` : ''
 			}`
 		)
 			.then(response => response.json())
-			.then(data => {
-				console.log(data);
-			})
+			.then(data => {})
 			.catch(error => {
 				console.error('Request error', error);
 			});
@@ -66,6 +73,7 @@ const Data = () => {
 							type='number'
 							min='1'
 							max='50'
+							value={number}
 							onChange={e => {
 								setNumber(e.target.value);
 							}}
